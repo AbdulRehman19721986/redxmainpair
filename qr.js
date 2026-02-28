@@ -16,14 +16,14 @@ const MESSAGE = `
 *SESSION GENERATED SUCCESSFULLY* ✅
 
 *Gɪᴠᴇ ᴀ ꜱᴛᴀʀ ᴛᴏ ʀᴇᴘᴏ ꜰᴏʀ ᴄᴏᴜʀᴀɢᴇ* 🌟
-https://github.com/GlobalTechInfo/MEGA-MD
+https://github.com/AbdulRehman19721986/redxbot302
 
 *Sᴜᴘᴘᴏʀᴛ Gʀᴏᴜᴘ ꜰᴏʀ ϙᴜᴇʀʏ* 💭
-https://t.me/Global_TechInfo
-https://whatsapp.com/channel/0029VagJIAr3bbVBCpEkAM07
+https://t.me/TeamRedxhacker2
+https://whatsapp.com/channel/0029VbCPnYf96H4SNehkev10
 
 *Yᴏᴜ-ᴛᴜʙᴇ ᴛᴜᴛᴏʀɪᴀʟꜱ* 🪄 
-https://youtube.com/@GlobalTechInfo
+https://youtube.com/@rootmindtech
 
 *MEGA-MD--WHATSAPP* 🥀
 `;
