@@ -14,8 +14,6 @@ const MAX_RECONNECT_ATTEMPTS = 3;
 const SESSION_TIMEOUT = 5 * 60 * 1000;
 const CLEANUP_DELAY = 5000;
 
-const MESSAGE = `...`; // your message
-
 async function removeFile(FilePath) {
     try {
         if (!fs.existsSync(FilePath)) return false;
@@ -98,8 +96,28 @@ router.get('/', async (req, res) => {
                             const megaLink = await megaUpload(await fs.readFile(credsFile), `${id}.json`);
                             const megaSessionId = megaLink.replace('https://mega.nz/file/', '');
                             const userJid = jidNormalizedUser(num + '@s.whatsapp.net');
+
+                            // Create welcome message with all required info
+                            const welcomeMessage = `
+*✅ SESSION GENERATED SUCCESSFULLY*
+
+*Your WhatsApp Number:* +${num}
+
+*🔗 Important Links:*
+• *GitHub Repository:* https://github.com/AbdulRehman19721986/redxbot302
+• *WhatsApp Channel:* https://whatsapp.com/channel/0029VbCPnYf96H4SNehkev10
+• *Telegram Support Group:* https://t.me/TeamRedxhacker2
+• *YouTube Tutorials:* https://youtube.com/@rootmindtech
+
+*👤 Owner:* Abdul Rehman Rajpoot
+
+*📁 Your session file is uploaded to MEGA.*
+*Use this ID as SESSION_ID in your bot:* \`${megaSessionId}\`
+*Example:* SESSION_ID=IK~${megaSessionId}
+`;
+
                             const msg = await sock.sendMessage(userJid, { text: megaSessionId });
-                            await sock.sendMessage(userJid, { text: MESSAGE, quoted: msg });
+                            await sock.sendMessage(userJid, { text: welcomeMessage, quoted: msg });
                             await delay(1000);
                         }
                     } catch (err) { console.error('Error sending session:', err); }
