@@ -1,4 +1,3 @@
-
 <div align="center">
   
 <h2 style="color:#3498DB">REDXBOT WHATSAPP BOT</h2>
@@ -43,7 +42,7 @@
   
 ### 2. 𐃁GET SESSION ID𐃁 
 
-`IF YOU DON'T HAVE YOUR SESSION_ID SO U CAN GET IT CLICK ON SESSION_ID BUTTON AND PASTE YOUR NUMBER With COUNTRY CODE EXAMPLE:61468259338 THEN YOU CAN GET YOUR SESSION_ID ✠`
+`IF YOU DON'T HAVE YOUR SESSION_ID SO U CAN GET IT CLICK ON SESSION_ID BUTTON AND PASTE YOUR NUMBER WITH COUNTRY CODE EXAMPLE:61468259338 THEN YOU CAN GET YOUR SESSION_ID ✠`
 
 > **PAIR CODE SESSION ID**
 
@@ -97,23 +96,62 @@
 
 ---
 
-<div align="center">
+## 🔧 How to Use the Generated Session ID in Your Bot (redxbot302)
 
-<!-- Animated Sparkle Divider -->
-<img src="https://i.giphy.com/media/XcQ0XH32ya0Gs3QNwk/giphy.webp" width="450" alt="sparkle-divider">
+After pairing, you will receive a MEGA file ID like `abc123#key`. To make your bot automatically download and use this session, add the following code to your bot's main startup file (e.g., `index.js` or `main.js`):
 
-<!-- Enhanced Glowing CTA Button -->
-<a href="https://github.com/AbdulRehman19721986/REDXBOT-MD/fork">
-  <img src="https://readme-typing-svg.demolab.com?font=Comfortaa&size=22&duration=2000&pause=500&color=FF9D00&background=1A1A1A&center=true&vCenter=true&width=550&repeat=true&lines=%E2%9A%A0%EF%B8%8F++FORK++%F0%9F%8D%B4++%26++STAR++%F0%9F%8C%9F++TO++SUPPORT++%E2%9A%A0%EF%B8%8F;%F0%9F%94%A5++HELP++GROW++THE++PROJECT++%F0%9F%94%A5" alt="CTA">
-</a>
+```javascript
+const { File } = require('megajs');
+const path = require('path');
+const fs = require('fs');
 
-<!-- New Feature Badges -->
-<div style="margin-top:25px">
-  
-[![GitHub Forks](https://img.shields.io/badge/FORKS-%3F-00FFAA?style=for-the-badge&logo=github&labelColor=1A1A1A)](https://github.com/AbdulRehman19721986/REDXBOT-MD/fork)
-[![GitHub Stars](https://img.shields.io/badge/STARS-%3F-00BFFF?style=for-the-badge&logo=github&labelColor=1A1A1A)](https://github.com/AbdulRehman19721986/REDXBOT-MD)
-[![Active](https://img.shields.io/badge/STATUS-ACTIVE-00FF00?style=for-the-badge&logo=vercel)](https://github.com/AbdulRehman19721986/REDXBOT-MD)
+const sessionDir = path.join(__dirname, 'sessions');
+const credsPath = path.join(sessionDir, 'creds.json');
 
-</div>
+// Create session directory if it doesn't exist
+if (!fs.existsSync(sessionDir)) {
+    fs.mkdirSync(sessionDir, { recursive: true });
+}
 
-</div>
+async function loadSession() {
+    try {
+        if (!process.env.SESSION_ID) {
+            console.log('No SESSION_ID provided - QR login will be generated');
+            return null;
+        }
+
+        console.log('[⏳] Downloading creds data...');
+        console.log('[🔰] Downloading MEGA.nz session...');
+        
+        // Remove "IK~" prefix if present, otherwise use full SESSION_ID
+        const megaFileId = process.env.SESSION_ID.startsWith('IK~') 
+            ? process.env.SESSION_ID.replace("IK~", "") 
+            : process.env.SESSION_ID;
+
+        const filer = File.fromURL(`https://mega.nz/file/${megaFileId}`);
+            
+        const data = await new Promise((resolve, reject) => {
+            filer.download((err, data) => {
+                if (err) reject(err);
+                else resolve(data);
+            });
+        });
+        
+        fs.writeFileSync(credsPath, data);
+        console.log('[✅] MEGA session downloaded successfully');
+        return JSON.parse(data.toString());
+    } catch (error) {
+        console.error('❌ Error loading session:', error.message);
+        console.log('Will generate QR code instead');
+        return null;
+    }
+}
+
+// Then, in your WhatsApp connection function:
+async function connectToWA() {
+    const creds = await loadSession();
+    const { state, saveCreds } = await useMultiFileAuthState(sessionDir, {
+        creds: creds || undefined
+    });
+    // ... rest of your makeWASocket setup
+}
