@@ -32,7 +32,7 @@
   
 --- 
 
-<a center="https://ibb.co/GvT68BsK"><img src="https://files.catbox.moe/4964gx.jpg" alt="glow" border="0"></a>
+<a center="https://ibb.co/GvT68BsK"><img src="https://files.catbox.moe/dck7xl.jpg" alt="glow" border="0"></a>
 ***
 
 ### 1. 𐃁FORK THIS REPOSITORY𐃁
