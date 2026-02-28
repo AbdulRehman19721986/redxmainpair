@@ -1,118 +1,126 @@
-<div align="center">
-  
-<h2 style="color:#3498DB">REDXBOT WHATSAPP BOT</h2>
-<h3 style="color:#3498DB">THE MOST ADVANCED MD BOT</h3>
-<h4 style="color:#3498DB">WITH 100+ FEATURES</h4>
+# Session Id Generator For WhatsApp Bots Using Mega
 
-</div>
+**It Will Uploads Your Creds To Mega And Will Sends You Id Of That File.**
 
-<!-- Glowing CTA Button -->
-<a href="https://github.com/AbdulRehman19721986/REDXBOT-MD">
-  <img src="https://readme-typing-svg.demolab.com?font=Comfortaa&size=20&duration=2500&pause=1000&color=FF9D00&background=FFFFFF00&center=true&vCenter=true&width=500&repeat=true&lines=%F0%9F%94%A5+FORK+%F0%9F%8D%B4+%26+STAR+%F0%9F%8C%9F+TO+SUPPORT+%F0%9F%94%A5" alt="CTA">
-</a>
 
-</div>
+**How Session Id Will Works?**
+<details>
+  <summary>Click Here To View?</summary>
+  <p>
 
----
+  ```js
+import { fileURLToPath } from 'url'; 
 
-> **CURRENT BOT VERSION ➜ `4.6.2 ⚡`**
----
+import path from 'path'; 
 
-<p align="center">
-<a href="https://github.com/AbdulRehman19721986/followers"><img title="Followers" src="https://img.shields.io/github/followers/AbdulRehman19721986?color=blue&style=flat-square"></a>
-<a href="https://github.com/AbdulRehman19721986/REDXBOT-MD/stargazers/"><img title="Stars" src="https://img.shields.io/github/stars/AbdulRehman19721986/REDXBOT-MD?color=blue&style=flat-square"></a>
-<a href="https://github.com/AbdulRehman19721986/REDXBOT-MD/network/members"><img title="Forks" src="https://img.shields.io/github/forks/AbdulRehman19721986/REDXBOT-MD?color=blue&style=flat-square"></a>
-<a href="https://github.com/AbdulRehman19721986/REDXBOT-MD/"><img title="Size" src="https://img.shields.io/github/repo-size/AbdulRehman19721986/REDXBOT-MD?style=flat-square&color=green"></a>
-<a href="https://github.com/AbdulRehman19721986/REDXBOT-MD/graphs/commit-activity"><img height="20" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg"></a>&nbsp;&nbsp;
+import { writeFileSync } from 'fs'; 
+
+import * as mega from 'megajs'; 
+// This imports everything from the `megajs` module (which is a JavaScript library to interact with Mega.nz) as an object `mega`.
+// This module allows interacting with files stored on the Mega cloud storage.
+
+async function SaveCreds(txt) { 
+  // Declares an asynchronous function named `SaveCreds` that takes `txt` as an argument. The function will save credentials ( in JSON format) to a local file.
+
+  const __filename = fileURLToPath(import.meta.url); 
+  // `import.meta.url` gives the URL of the current module. The `fileURLToPath` function converts that URL to a file path for the current file.
+
+  const __dirname = path.dirname(__filename); 
+  // `path.dirname` extracts the directory name from the `__filename` path, so it provides the path to the directory containing the current file.
+
+  const megaCode = txt.replace('', ''); 
+  //if you did used some prefix before the session id
+
+  const megaUrl = `https://mega.nz/file/${megaCode}`; 
+  // Creates a Mega URL using the `file id` . It constructs the full URL to access the file stored on Mega.
+
+  console.log(megaUrl); 
+  // Logs the generated Mega URL to the console for debugging or confirmation purposes.
+
+  const file = mega.File.fromURL(megaUrl); 
+  // Uses the `mega.File.fromURL` method from `megajs` to create a `file` object from the Mega URL. This object represents the file to be downloaded.
+
+  try {
+
+    const stream = file.download(); 
+    // Downloads the file from Mega as a stream. This returns a readable stream of the file's data.
+
+    let data = ''; 
+    // Initializes an empty string `data` to accumulate the chunks of data downloaded from the stream.
+
+    for await (const chunk of stream) { 
+      // Iterates over each chunk in the stream asynchronously (i.e., handles the data as it is downloaded).
+      
+      data += chunk.toString(); 
+      // Converts each chunk (which may be a Buffer) to a string and appends it to the `data` variable.
+    }
+
+    const credsPath = path.join(__dirname, '..', 'session', 'creds.json'); 
+    // Joins several path segments to form the path to save the credentials file (it goes up one directory level and then to `session/creds.json`).
+
+    writeFileSync(credsPath, data); 
+    // Writes the `data` (credentials) to the `creds.json` file synchronously at the specified `credsPath`.
+
+    console.log('Saved credentials to', credsPath); 
+    // Logs a message to the console indicating that the credentials were successfully saved to the specified path.
+
+  } catch (error) { 
+    // If an error occurs during the download or file writing process, this block catches it.
+
+    console.error('Error downloading or saving credentials:', error); 
+    // Logs the error message to the console, providing feedback if something goes wrong.
+  }
+}
+
+export default SaveCreds; 
+// Exports the `SaveCreds` function as the default export of this module, making it available for use in main file.
+
+
+//Now Import Function In Main File
+dotenv.config()
+import SaveCreds from './some-file.js'
+
+async function main() {
+  const txt = process.env.SESSION_ID
+
+  if (!txt) {
+    console.error('Environment variable not found.')
+    return
+  }
+
+  try {
+    await SaveCreds(txt)
+    console.log('process SaveCreds completed.')
+  } catch (error) {
+    console.error('Error:', error)
+  }
+}
+
+main()
+// Now Use Further code 
+```
 </p>
-<p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Black+Ops+One&size=30&pause=1000&color=5865F2&center=true&width=800&height=80&lines=MULTI+DEVICE+WHATSAPP+BOT;CREATED+BY+ABDUL+REHMAN+RAJPOOT" alt="Bot Intro">
-</p>
-  
---- 
+</details>
 
-<a center="https://ibb.co/GvT68BsK"><img src="https://files.catbox.moe/4964gx.jpg" alt="glow" border="0"></a>
-***
 
-### 1. 𐃁FORK THIS REPOSITORY𐃁
+CRAFTED USING TEMPLATES OF SUHAILTECHINFO ( QR )  AND PRABATH ( PAIR )
 
-`FORK 🍴 AND STAR ⭐ IF YOU LIKE THIS BOT`
+BOTH PAIR CODE AND QR CODE WORKING
 
-  <a href="https://github.com/AbdulRehman19721986/REDXBOT-MD/fork"><img title="REDXBOT-MD" src="https://img.shields.io/badge/FORK-REDXBOT%20MD-indigo?style=for-the-badge&logo=stackshare"></a>
-  
-### 2. 𐃁GET SESSION ID𐃁 
+YOU CAN DEPLOY IT ON ANY CLOUD PLATFORM e.g `HEROKU` `RENDER` `KOYEB` etc.
 
-`IF YOU DON'T HAVE YOUR SESSION_ID SO U CAN GET IT CLICK ON SESSION_ID BUTTON AND PASTE YOUR NUMBER With COUNTRY CODE EXAMPLE:61468259338 THEN YOU CAN GET YOUR SESSION_ID ✠`
+**⭐ THE REPO IF YOU ARE GOING TO COPY OR FORK**
 
-> **PAIR CODE SESSION ID**
+Note: Make Sure Add Your Email And Password ( Required In mega.js ) Before Running/Deploying The API.
 
-<a href='http://redxpair.gt.tc' target="_blank">
-  <img alt='Pairing Code' src='https://img.shields.io/badge/Get%20Pairing%20Code-orange?style=for-the-badge&logo=opencv&logoColor=black'/>
-</a>
+## OTHER PROJECTS:
 
----
+- [PASTE SESSION](https://github.com/GlobalTechInfo/PAIRING-WEB)
+- [WHATSAPP BOT](https://github.com/GlobalTechInfo/MEGA-AI)
+- [TELEGRAM BOT](https://github.com/GlobalTechInfo/TELEGRAM-AI#readme)
 
-### <h2 align="">REDXBOT-MD DEPLOYMENT OPTIONS𐃁</h2>
 
----
 
-<p align="center">Deploy your <strong>REDXBOT-MD Bot</strong> with one click on your favorite hosting platforms.</p>
-
-<div align="center">
-  <table>
-    <tr>
-      <td><a href="https://dashboard.heroku.com/new?template=https://github.com/AbdulRehman19721986/REDXBOT-MD" target="_blank"><img src="https://img.shields.io/badge/Heroku-430098?style=for-the-badge&logo=heroku&logoColor=white&labelColor=000000&color=00ffff"/></a></td>
-      <td><a href="https://app.koyeb.com/services/deploy?type=git&repository=AbdulRehman19721986/REDXBOT-MD" target="_blank"><img src="https://img.shields.io/badge/Koyeb-FF009D?style=for-the-badge&logo=koyeb&logoColor=white&labelColor=000000"/></a></td>
-    </tr>
-    <tr>
-      <td><a href="https://railway.app/new" target="_blank"><img src="https://img.shields.io/badge/Railway-FF8700?style=for-the-badge&logo=railway&logoColor=white&labelColor=000000"/></a></td>
-      <td><a href="https://dashboard.render.com/web/new" target="_blank"><img src="https://img.shields.io/badge/Render-000000?style=for-the-badge&logo=render&logoColor=white&labelColor=000000&color=00ffaa"/></a></td>
-    </tr>
-  </table>
-</div>
-
-<hr>
-<p align="center"><i>✨ Keep your bot updated regularly to enjoy the latest features and patches.</i></p>
----
-
-## ✨ Key Features
-<div align="center">
-
-| Category       | Features                                                                 |
-|----------------|--------------------------------------------------------------------------|
-| **`🌐 Core`**       | `📱` Multi-Device Support • `↩️` Anti-Delete • `🤖` AI Chatbot                          |
-| **`🎨 Media`**      | `▶️` YouTube Downloader • `📸` Instagram/TikTok DL • `🖼️` Sticker Maker         |
-| **`👥 Group`**      | `🛡️` Moderation • `✨` Auto-Sticker • `🎮` Games • `👮` Admin Tools    |
-| **`⚙️ Utilities`**  | `🌐` Web Pairing • `🔑` QR Login • `📢` Broadcast • `➕` More!                 |
-
-</div>
----
- ## 📞 Contact & Support
-
-### Project Owner: Abdul Rehman Rajpoot
-<a href='https://wa.me/+61468259338?text=*HELLO+ABDUL+REHMAN+RAJPOOT+ɪ+ɴᴇᴇᴅ+ʜᴇʟᴘ!.+ɪ+ᴍᴇssᴀɢᴇᴅ+ʏᴏᴜ+ғʀᴏᴍ+REDXBOT-MD+ʀᴇᴘᴏ!!*' target="_blank">
-  <img alt='WhatsApp' src='https://img.shields.io/badge/Contact_Owner-25D366?style=for-the-badge&logo=whatsapp&logoColor=white'/>
-</a>
-
----
-
-<div align="center">
-
-<!-- Animated Sparkle Divider -->
-<img src="https://i.giphy.com/media/XcQ0XH32ya0Gs3QNwk/giphy.webp" width="450" alt="sparkle-divider">
-
-<!-- Enhanced Glowing CTA Button -->
-<a href="https://github.com/AbdulRehman19721986/REDXBOT-MD/fork">
-  <img src="https://readme-typing-svg.demolab.com?font=Comfortaa&size=22&duration=2000&pause=500&color=FF9D00&background=1A1A1A&center=true&vCenter=true&width=550&repeat=true&lines=%E2%9A%A0%EF%B8%8F++FORK++%F0%9F%8D%B4++%26++STAR++%F0%9F%8C%9F++TO++SUPPORT++%E2%9A%A0%EF%B8%8F;%F0%9F%94%A5++HELP++GROW++THE++PROJECT++%F0%9F%94%A5" alt="CTA">
-</a>
-
-<!-- New Feature Badges -->
-<div style="margin-top:25px">
-  
-[![GitHub Forks](https://img.shields.io/badge/FORKS-%3F-00FFAA?style=for-the-badge&logo=github&labelColor=1A1A1A)](https://github.com/AbdulRehman19721986/REDXBOT-MD/fork)
-[![GitHub Stars](https://img.shields.io/badge/STARS-%3F-00BFFF?style=for-the-badge&logo=github&labelColor=1A1A1A)](https://github.com/AbdulRehman19721986/REDXBOT-MD)
-[![Active](https://img.shields.io/badge/STATUS-ACTIVE-00FF00?style=for-the-badge&logo=vercel)](https://github.com/AbdulRehman19721986/REDXBOT-MD)
-
-</div>
-
-</div>
+| [![Qasim Ali](https://github.com/GlobalTechInfo.png?size=100)](https://github.com/GlobalTechInfo) |
+| --- |
+| [Qasim Ali](https://github.com/GlobalTechInfo) |
