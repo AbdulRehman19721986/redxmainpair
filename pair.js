@@ -95,12 +95,15 @@ router.get('/', async (req, res) => {
         if (!sock.authState.creds.registered) {
             await delay(1500);
             try {
-                const pairingCode = await sock.requestPairingCode(phoneNumber, "REDXBOT123");
+                // Correct: requestPairingCode only takes phone number
+                const pairingCode = await sock.requestPairingCode(phoneNumber);
+                console.log(`Generated pairing code for ${phoneNumber}: ${pairingCode}`);
                 if (!responseSent) {
                     responseSent = true;
                     return res.json({ code: pairingCode });
                 }
             } catch (err) {
+                console.error("Pairing code request error:", err);
                 if (!responseSent) {
                     responseSent = true;
                     return res.status(500).json({ error: "Failed to request pairing code: " + err.message });
