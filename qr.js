@@ -3,37 +3,14 @@ import fs from 'fs-extra';
 import pino from 'pino';
 import QRCode from 'qrcode';
 import {
-    makeWASocket,
-    useMultiFileAuthState,
-    makeCacheableSignalKeyStore,
-    Browsers,
-    jidNormalizedUser,
-    fetchLatestBaileysVersion,
-    delay,
-    DisconnectReason
+    makeWASocket, useMultiFileAuthState, makeCacheableSignalKeyStore,
+    Browsers, jidNormalizedUser, fetchLatestBaileysVersion, delay, DisconnectReason
 } from '@whiskeysockets/baileys';
-import uploadToPastebin from './Paste.js';
-import uploadToMega from './mega.js';
+import { upload as megaUpload } from './mega.js';
 
 const router = express.Router();
 const MAX_RECONNECT_ATTEMPTS = 3;
 const SESSION_TIMEOUT = 60000;
-
-const MESSAGE = `
-*SESSION GENERATED SUCCESSFULLY* ✅
-
-*Gɪᴠᴇ ᴀ ꜱᴛᴀʀ ᴛᴏ ʀᴇᴘᴏ ꜰᴏʀ ᴄᴏᴜʀᴀɢᴇ* 🌟
-https://github.com/GlobalTechInfo/MEGA-MD
-
-*Sᴜᴘᴘᴏʀᴛ Gʀᴏᴜᴘ ꜰᴏʀ ϙᴜᴇʀʏ* 💭
-https://t.me/Global_TechInfo
-https://whatsapp.com/channel/0029VagJIAr3bbVBCpEkAM07
-
-*Yᴏᴜ-ᴛᴜʙᴇ ᴛᴜᴛᴏʀɪᴀʟꜱ* 🪄 
-https://youtube.com/@GlobalTechInfo
-
-*MEGA-MD--WHATSAPP* 🥀
-`;
 
 async function removeFile(FilePath) {
     try {
@@ -46,11 +23,17 @@ async function removeFile(FilePath) {
     }
 }
 
-// Shared session handler for both QR and number pairing
-async function handlePairing(req, res, method) {
+function randomMegaId(len = 6, numLen = 4) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let out = '';
+    for (let i = 0; i < len; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
+    return `${out}${Math.floor(Math.random() * Math.pow(10, numLen))}`;
+}
+
+router.get('/', async (req, res) => {
     const sessionId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
-    const dirs = `./sessions/session_${sessionId}`;
-    if (!fs.existsSync('./sessions')) await fs.mkdir('./sessions', { recursive: true });
+    const dirs = `./qr_sessions/session_${sessionId}`;
+    if (!fs.existsSync('./qr_sessions')) await fs.mkdir('./qr_sessions', { recursive: true });
 
     let qrGenerated = false;
     let sessionCompleted = false;
@@ -63,30 +46,40 @@ async function handlePairing(req, res, method) {
     async function cleanup(reason = 'unknown') {
         if (isCleaningUp) return;
         isCleaningUp = true;
+
         console.log(`🧹 Cleaning up session ${sessionId} - Reason: ${reason}`);
 
         if (timeoutHandle) {
             clearTimeout(timeoutHandle);
             timeoutHandle = null;
         }
+
         if (currentSocket) {
             try {
                 currentSocket.ev.removeAllListeners();
                 await currentSocket.end();
-            } catch (e) {}
+            } catch (e) {
+                console.error('Error closing socket:', e);
+            }
             currentSocket = null;
         }
+
         setTimeout(async () => {
             await removeFile(dirs);
         }, 5000);
     }
 
-    async function initiateSession(phoneNumber = null) {
-        if (sessionCompleted || isCleaningUp) return;
+    async function initiateSession() {
+        if (sessionCompleted || isCleaningUp) {
+            console.log('⚠️ Session already completed or cleaning up');
+            return;
+        }
+
         if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+            console.log('❌ Max reconnection attempts reached');
             if (!responseSent && !res.headersSent) {
                 responseSent = true;
-                res.status(503).send({ error: 'Connection failed after multiple attempts' });
+                res.status(503).send({ code: 'Connection failed after multiple attempts' });
             }
             await cleanup('max_reconnects');
             return;
@@ -125,33 +118,10 @@ async function handlePairing(req, res, method) {
 
             const sock = currentSocket;
 
-            // For number pairing, request code immediately after socket creation
-            if (method === 'pair' && phoneNumber) {
-                setTimeout(async () => {
-                    try {
-                        const code = await sock.requestPairingCode(phoneNumber);
-                        const formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
-                        if (!responseSent && !res.headersSent) {
-                            responseSent = true;
-                            res.send({
-                                pairingCode: formattedCode,
-                                message: `Your pairing code is: ${formattedCode}. Enter it in WhatsApp.`
-                            });
-                        }
-                    } catch (err) {
-                        console.error('Pairing code error:', err);
-                        if (!responseSent && !res.headersSent) {
-                            responseSent = true;
-                            res.status(500).send({ error: 'Failed to generate pairing code' });
-                        }
-                        await cleanup('pairing_error');
-                    }
-                }, 1000);
-            }
-
             const handleQRCode = async (qr) => {
-                if (qrGenerated || responseSent || sessionCompleted || isCleaningUp || method === 'pair') return;
+                if (qrGenerated || responseSent || sessionCompleted || isCleaningUp) return;
                 qrGenerated = true;
+
                 try {
                     const qrDataURL = await QRCode.toDataURL(qr, { errorCorrectionLevel: 'M' });
                     if (!responseSent && !res.headersSent) {
@@ -172,7 +142,7 @@ async function handlePairing(req, res, method) {
                     console.error('Error generating QR code:', err);
                     if (!responseSent && !res.headersSent) {
                         responseSent = true;
-                        res.status(500).send({ error: 'Failed to generate QR code' });
+                        res.status(500).send({ code: 'Failed to generate QR code' });
                     }
                     await cleanup('qr_error');
                 }
@@ -180,9 +150,10 @@ async function handlePairing(req, res, method) {
 
             sock.ev.on('connection.update', async (update) => {
                 if (isCleaningUp) return;
+
                 const { connection, lastDisconnect, qr, isNewLogin } = update;
 
-                if (qr && method === 'qr') {
+                if (qr && !qrGenerated && !sessionCompleted) {
                     await handleQRCode(qr);
                 }
 
@@ -193,23 +164,39 @@ async function handlePairing(req, res, method) {
                     try {
                         const credsFile = `${dirs}/creds.json`;
                         if (fs.existsSync(credsFile)) {
-                            let uploadResult;
-                            if (method === 'qr') {
-                                console.log('📄 Uploading to Pastebin...');
-                                uploadResult = await uploadToPastebin(credsFile, 'creds.json', 'json', '1');
-                            } else {
-                                console.log('📄 Uploading to Mega...');
-                                uploadResult = await uploadToMega(credsFile, `creds_${sessionId}.json`);
-                            }
-                            console.log('✅ Session uploaded:', uploadResult);
+                            console.log('📄 Uploading creds.json to MEGA...');
+                            const id = randomMegaId();
+                            const megaLink = await megaUpload(await fs.readFile(credsFile), `${id}.json`);
+                            const megaSessionId = megaLink.replace('https://mega.nz/file/', '');
+                            console.log('✅ Session uploaded to MEGA, ID:', megaSessionId);
 
                             const userJid = Object.keys(sock.authState.creds.me || {}).length > 0
                                 ? jidNormalizedUser(sock.authState.creds.me.id)
                                 : null;
 
                             if (userJid) {
-                                const msg = await sock.sendMessage(userJid, { text: uploadResult });
-                                await sock.sendMessage(userJid, { text: MESSAGE, quoted: msg });
+                                // Extract the bot's WhatsApp number
+                                const botNumber = userJid.split('@')[0];
+                                const welcomeMessage = `
+*✅ SESSION GENERATED SUCCESSFULLY*
+
+*Your WhatsApp Number:* +${botNumber}
+
+*🔗 Important Links:*
+• *GitHub Repository:* https://github.com/AbdulRehman19721986/redxbot302
+• *WhatsApp Channel:* https://whatsapp.com/channel/0029VbCPnYf96H4SNehkev10
+• *Telegram Support Group:* https://t.me/TeamRedxhacker2
+• *YouTube Tutorials:* https://youtube.com/@rootmindtech
+
+*👤 Owner:* Abdul Rehman Rajpoot
+
+*📁 Your session file is uploaded to MEGA.*
+*Use this ID as SESSION_ID in your bot:* \`${megaSessionId}\`
+*Example:* SESSION_ID=IK~${megaSessionId}
+`;
+
+                                const msg = await sock.sendMessage(userJid, { text: megaSessionId });
+                                await sock.sendMessage(userJid, { text: welcomeMessage, quoted: msg });
                             }
 
                             await delay(1000);
@@ -225,18 +212,24 @@ async function handlePairing(req, res, method) {
 
                 if (connection === 'close') {
                     if (sessionCompleted || isCleaningUp) {
+                        console.log('✅ Session completed, not reconnecting');
                         await cleanup('already_complete');
                         return;
                     }
+
                     const statusCode = lastDisconnect?.error?.output?.statusCode;
+                    const reason = lastDisconnect?.error?.output?.payload?.error;
+
+                    console.log(`❌ Connection closed - Status: ${statusCode}, Reason: ${reason}`);
+
                     if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
                         console.log('❌ Logged out or invalid session');
                         if (!responseSent && !res.headersSent) {
                             responseSent = true;
-                            res.status(401).send({ error: 'Invalid QR scan or session expired' });
+                            res.status(401).send({ code: 'Invalid QR scan or session expired' });
                         }
                         await cleanup('logged_out');
-                    } else if (qrGenerated && !sessionCompleted && method === 'qr') {
+                    } else if (qrGenerated && !sessionCompleted) {
                         reconnectAttempts++;
                         console.log(`🔁 Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
                         await delay(2000);
@@ -251,10 +244,10 @@ async function handlePairing(req, res, method) {
 
             timeoutHandle = setTimeout(async () => {
                 if (!sessionCompleted && !isCleaningUp) {
-                    console.log('⏰ Timeout');
+                    console.log('⏰ QR generation timeout');
                     if (!responseSent && !res.headersSent) {
                         responseSent = true;
-                        res.status(408).send({ error: 'Session timeout' });
+                        res.status(408).send({ code: 'QR generation timeout' });
                     }
                     await cleanup('timeout');
                 }
@@ -264,46 +257,25 @@ async function handlePairing(req, res, method) {
             console.error('❌ Error initializing session:', err);
             if (!responseSent && !res.headersSent) {
                 responseSent = true;
-                res.status(503).send({ error: 'Service Unavailable' });
+                res.status(503).send({ code: 'Service Unavailable' });
             }
             await cleanup('init_error');
         }
     }
 
-    // For QR method, no phone number needed
-    if (method === 'qr') {
-        await initiateSession();
-    } else {
-        // For pair method, expect a phone number in query
-        const phoneNumber = req.query.number;
-        if (!phoneNumber) {
-            return res.status(400).send({ error: 'Missing phone number' });
-        }
-        const cleanNumber = phoneNumber.replace(/\D/g, '');
-        if (cleanNumber.length < 10 || cleanNumber.length > 15) {
-            return res.status(400).send({ error: 'Invalid phone number format' });
-        }
-        await initiateSession(cleanNumber);
-    }
-}
+    await initiateSession();
+});
 
-// QR route (existing)
-router.get('/', (req, res) => handlePairing(req, res, 'qr'));
-
-// Number pairing route
-router.get('/pair', (req, res) => handlePairing(req, res, 'pair'));
-
-// Cleanup old sessions periodically
 setInterval(async () => {
     try {
-        if (!fs.existsSync('./sessions')) return;
-        const sessions = await fs.readdir('./sessions');
+        if (!fs.existsSync('./qr_sessions')) return;
+        const sessions = await fs.readdir('./qr_sessions');
         const now = Date.now();
         for (const session of sessions) {
-            const sessionPath = `./sessions/${session}`;
+            const sessionPath = `./qr_sessions/${session}`;
             try {
                 const stats = await fs.stat(sessionPath);
-                if (now - stats.mtimeMs > 300000) { // 5 minutes
+                if (now - stats.mtimeMs > 300000) {
                     console.log(`🗑️ Removing old session: ${session}`);
                     await fs.remove(sessionPath);
                 }
@@ -313,18 +285,6 @@ setInterval(async () => {
         console.error('Error in cleanup interval:', e);
     }
 }, 60000);
-
-process.on('SIGTERM', async () => {
-    console.log('🛑 SIGTERM received, cleaning up...');
-    try { await fs.remove('./sessions'); } catch (e) {}
-    process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-    console.log('🛑 SIGINT received, cleaning up...');
-    try { await fs.remove('./sessions'); } catch (e) {}
-    process.exit(0);
-});
 
 process.on('uncaughtException', (err) => {
     const e = String(err);
