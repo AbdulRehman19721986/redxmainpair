@@ -13,8 +13,8 @@ RUN npm install
 # Copy the rest of the application files into the container
 COPY . .
 
-# Expose the port your app will be running on
-EXPOSE 8000
+# Render injects PORT at runtime — expose it
+EXPOSE $PORT
 
 # Command to run the app
 CMD ["npm", "start"]
