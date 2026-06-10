@@ -1,20 +1,16 @@
-# Use official Node.js image
-FROM node:20-bookworm
+FROM node:20-alpine
 
-# Set the working directory inside the container
+RUN apk add --no-cache python3 make g++ git
+
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the container
-COPY package*.json ./
+COPY package.json ./
+RUN npm install --production
 
-# Install the application dependencies
-RUN npm install
-
-# Copy the rest of the application files into the container
 COPY . .
 
-# Render injects PORT at runtime — expose it
-EXPOSE $PORT
+RUN mkdir -p sessions
 
-# Command to run the app
-CMD ["npm", "start"]
+EXPOSE 8000
+
+CMD ["node", "index.js"]

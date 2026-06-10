@@ -1,9 +1,24 @@
 services:
   - type: web
-    name: redxmainpair-backend
-    env: docker
+    name: redxmainpair
+    env: node
+    region: oregon
     plan: free
-    dockerfilePath: ./Dockerfile
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 8000
+      - key: PASTEBIN_API_KEY
+        value: 75TTl3WlG-piY0B40bb_Oh0mxO3nsE7o   # ← replace with your key
+      - key: PASTEBIN_PRIVACY
+        value: "1"
+      - key: PASTEBIN_EXPIRE
+        value: "1M"
+      - key: RENDER_EXTERNAL_URL
+        fromService:
+          type: web
+          name: redxmainpair
+          property: host

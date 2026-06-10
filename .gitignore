@@ -1,6 +1,6 @@
 node_modules/
-jspm_packages/
-
+sessions/
 .env
-.env.*
-!.env.example
+*.log
+auth_info_baileys/
+qr_sessions/

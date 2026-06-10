@@ -1,54 +1,63 @@
+/**
+ * Paste.js – Upload creds.json to Pastebin, return raw URL.
+ *
+ * Env vars:
+ *   PASTEBIN_API_KEY  – your Pastebin API dev key  (required for user-linked pastes)
+ *   PASTEBIN_PRIVACY  – 0=public, 1=unlisted (default), 2=private
+ *   PASTEBIN_EXPIRE   – expiry: N (never), 10M, 1H, 1D, 1W, 2W, 1M (default 1M)
+ */
+
 import axios from 'axios';
 import fs from 'fs-extra';
 import FormData from 'form-data';
 
 const PASTEBIN_API_URL = 'https://pastebin.com/api/api_post.php';
-const API_DEV_KEY = '75TTl3WlG-piY0B40bb_Oh0mxO3nsE7o';
+const API_DEV_KEY      = process.env.PASTEBIN_API_KEY || '75TTl3WlG-piY0B40bb_Oh0mxO3nsE7o';
+const PRIVACY          = process.env.PASTEBIN_PRIVACY || '1';
+const EXPIRE           = process.env.PASTEBIN_EXPIRE  || '1M';
 
 /**
- * Uploads a file to Pastebin and returns the raw URL.
- * @param {string} filePath - Path to the file to upload.
- * @param {string} fileName - Name for the paste (optional).
- * @param {string} fileType - Mime type or extension hint (not used directly).
- * @param {string} privacy - '0' public, '1' unlisted, '2' private.
- * @returns {Promise<string>} Raw Pastebin URL.
+ * Upload a file path to Pastebin.
+ * @param {string} filePath   - Local path to creds.json
+ * @param {string} [pasteName] - Paste title
+ * @returns {Promise<string>}  - Raw Pastebin URL: https://pastebin.com/raw/XXXXXXXX
  */
-export default async function uploadToPastebin(filePath, fileName = 'creds.json', fileType = 'json', privacy = '1') {
-    try {
-        // Read file content
-        const fileContent = await fs.readFile(filePath, 'utf8');
-
-        // Validate JSON (optional)
-        try {
-            JSON.parse(fileContent);
-        } catch (e) {
-            throw new Error('Invalid JSON file');
-        }
-
-        // Prepare form data
-        const formData = new FormData();
-        formData.append('api_dev_key', API_DEV_KEY);
-        formData.append('api_option', 'paste');
-        formData.append('api_paste_code', fileContent);
-        formData.append('api_paste_name', fileName);
-        formData.append('api_paste_private', privacy);
-        formData.append('api_paste_expire_date', '1M'); // 1 month
-
-        // Upload to Pastebin
-        const response = await axios.post(PASTEBIN_API_URL, formData, {
-            headers: formData.getHeaders(),
-        });
-
-        const pasteUrl = response.data.trim();
-        if (!pasteUrl.startsWith('https://pastebin.com/')) {
-            throw new Error(`Upload failed: ${pasteUrl}`);
-        }
-
-        // Convert to raw URL
-        const rawUrl = pasteUrl.replace('pastebin.com/', 'pastebin.com/raw/');
-        return rawUrl;
-    } catch (error) {
-        console.error('❌ Pastebin upload error:', error.message);
-        throw error;
-    }
+export async function uploadFile(filePath, pasteName = 'creds.json') {
+    const content = await fs.readFile(filePath, 'utf8');
+    // Validate JSON before upload
+    JSON.parse(content);
+    return uploadContent(content, pasteName);
 }
+
+/**
+ * Upload raw string content to Pastebin.
+ * @param {string} content
+ * @param {string} [pasteName]
+ * @returns {Promise<string>}  - Raw Pastebin URL
+ */
+export async function uploadContent(content, pasteName = 'session') {
+    const form = new FormData();
+    form.append('api_dev_key',          API_DEV_KEY);
+    form.append('api_option',           'paste');
+    form.append('api_paste_code',       content);
+    form.append('api_paste_name',       pasteName);
+    form.append('api_paste_private',    PRIVACY);
+    form.append('api_paste_expire_date', EXPIRE);
+    form.append('api_paste_format',     'json');
+
+    const response = await axios.post(PASTEBIN_API_URL, form, {
+        headers: form.getHeaders(),
+        timeout: 15_000,
+    });
+
+    const url = response.data.trim();
+    if (!url.startsWith('https://pastebin.com/')) {
+        throw new Error(`Pastebin error: ${url}`);
+    }
+
+    // Convert normal URL → raw URL
+    return url.replace('pastebin.com/', 'pastebin.com/raw/');
+}
+
+// Default export for backward compatibility
+export default uploadFile;
