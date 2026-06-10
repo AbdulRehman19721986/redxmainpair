@@ -18,7 +18,7 @@
   "author": "Abdul Rehman Rajpoot",
   "license": "MIT",
   "dependencies": {
-    "@whiskeysockets/baileys": "^7.0.0-rc.13",
+    "@whiskeysockets/baileys": "^7.0.0-rc13",
     "awesome-phonenumber": "^5.9.0",
     "axios": "^1.9.0",
     "body-parser": "^1.20.3",
