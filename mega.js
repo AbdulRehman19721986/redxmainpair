@@ -4,8 +4,8 @@ import fs from "fs";
 
 // Mega authentication credentials
 const auth = {
-    email: process.env.MEGA_EMAIL || "", // your mega account login email
-    password: process.env.MEGA_PASSWORD || "", // your mega account login password
+    email: process.env.MEGA_EMAIL || "abdulrehman19721986@gmail.com", // your mega account login email
+    password: process.env.MEGA_PASSWORD || "amin@1986", // your mega account login password
     userAgent:
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246",
 };
