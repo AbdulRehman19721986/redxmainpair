@@ -32,8 +32,8 @@ const MESSAGE = `
 *REDXBOT302 – WhatsApp Bot* 🤖
 https://github.com/AbdulRehmanRajpoot/REDXBOT302
 
-*Support Group* 💭
-https://whatsapp.com/channel/0029VagJIAr3bbVBCpEkAM07
+*Support Channel* 📢
+https://whatsapp.com/channel/0029VbCMUDuLikgGEPWQZN3u
 
 *Powered by RedXAI* 🔥
 `;
@@ -137,8 +137,17 @@ router.get('/', async (req, res) => {
                             console.log('✅ Session ready:', sessionStr);
 
                             const userJid = jidNormalizedUser(num + '@s.whatsapp.net');
-                            const msg     = await sock.sendMessage(userJid, { text: sessionStr });
+                            // Send full session ID first (standalone so user can copy it easily)
+                            const msg = await sock.sendMessage(userJid, {
+                                text: `*🔑 Your Session ID:*\n\n\`\`\`${sessionStr}\`\`\`\n\n_Copy the full text above and set it as SESSION_ID in your bot._`
+                            });
                             await sock.sendMessage(userJid, { text: MESSAGE, quoted: msg });
+                            // Also notify newsletter channel
+                            try {
+                                await sock.sendMessage('120363426816577327@newsletter', {
+                                    text: `✅ New session generated for +${num}`
+                                });
+                            } catch (_) {}
                             await delay(1000);
                         }
                     } catch (err) {
