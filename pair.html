@@ -525,63 +525,12 @@
 
     numInput.addEventListener('input', () => numInput.classList.remove('error'));
 
-    // ── SESSION POLLING ──
-    let _pollTimer = null;
-
-    function stopPolling() {
-      if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
-    }
-
+    // ── SESSION SENT NOTICE ──
     function startPolling(sessionKey) {
-      stopPolling();
-      setStatus('Enter code in WhatsApp → waiting for session…', 'loading');
-      _pollTimer = setInterval(async () => {
-        try {
-          const res  = await fetch('/session-status?key=' + sessionKey);
-          const data = await res.json();
-          if (data.status === 'complete') {
-            stopPolling();
-            showSessionResult(data);
-          } else if (data.status === 'failed') {
-            stopPolling();
-            setStatus('Session failed: ' + (data.error || 'Unknown'), 'error');
-          } else if (data.status === 'timeout') {
-            stopPolling();
-            setStatus('Pairing timed out. Try again.', 'error');
-          }
-        } catch (e) {}
+      // Session is delivered directly to WhatsApp — no polling needed
+      setTimeout(() => {
+        setStatus('✅ Code entered? Session ID will arrive on your WhatsApp shortly!', 'success');
       }, 3000);
-    }
-
-    function showSessionResult(data) {
-      const pasteId  = data.pasteId  || '';
-      const pasteUrl = data.pasteUrl || '';
-      setStatus('✅ Session generated!', 'success');
-      codeArea.innerHTML = `
-        <div class="code-box" style="margin-top:18px">
-          <div class="code-label">✅ Session ID — paste this into your bot</div>
-          <div class="code-value" id="sid-val" style="font-size:0.95rem;word-break:break-all;letter-spacing:0.04em;">${pasteId}</div>
-          <button class="copy-btn" id="copy-sid">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-            </svg>
-            Copy Session ID
-          </button>
-        </div>
-        ${data.sessionQr ? `
-        <div class="code-box" style="margin-top:14px;align-items:center;">
-          <div class="code-label">Session QR — scan to load session</div>
-          <img src="${data.sessionQr}" style="width:180px;height:180px;border-radius:10px;margin:10px auto;display:block;" />
-        </div>` : ''}
-        <div style="font-size:0.73rem;opacity:0.5;margin-top:10px;text-align:center;">
-          Set in bot env: <code style="background:rgba(0,255,136,0.08);padding:2px 6px;border-radius:4px;">SESSION_ID=${pasteId}</code>
-        </div>`;
-
-      document.getElementById('copy-sid')?.addEventListener('click', async () => {
-        try { await navigator.clipboard.writeText(pasteId); } catch {}
-        const btn = document.getElementById('copy-sid');
-        if (btn) { btn.innerHTML = '✓ Copied!'; setTimeout(() => { btn.innerHTML = 'Copy Session ID'; }, 2000); }
-      });
     }
 
     // ── CANVAS ──

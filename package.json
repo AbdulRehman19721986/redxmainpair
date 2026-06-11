@@ -1,29 +1,23 @@
 {
   "name": "redxmainpair",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "type": "module",
-  "description": "REDXBOT302 WhatsApp Pairing Backend – Pastebin QR System",
+  "description": "REDXBOT302 WhatsApp Pairing – Pastebin Session System",
   "main": "index.js",
   "engines": {
-    "node": ">=20.0.0"
+    "node": "24.x"
   },
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
-  "keywords": [
-    "baileys", "whatsapp-pairing", "baileys-7", "session-pairing",
-    "qr-code", "pastebin", "redxbot302"
-  ],
   "author": "Abdul Rehman Rajpoot",
   "license": "MIT",
   "dependencies": {
     "@whiskeysockets/baileys": "^7.0.0-rc13",
     "awesome-phonenumber": "^5.9.0",
-    "axios": "^1.9.0",
     "body-parser": "^1.20.3",
     "express": "^4.21.2",
-    "form-data": "^4.0.1",
     "fs-extra": "^11.3.0",
     "path": "^0.12.7",
     "pino": "^9.6.0",

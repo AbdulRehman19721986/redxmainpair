@@ -481,7 +481,7 @@
           qrArea.style.display  = 'flex';
 
           // start polling for session result after QR shown
-          if (data.sessionKey) startPolling(data.sessionKey);
+          // session delivered directly to WhatsApp after scan
         } else {
           throw new Error(data.code || 'No QR data');
         }
@@ -494,64 +494,7 @@
 
     loadQRCode();
 
-    // ── SESSION POLLING ──
-    let _pollTimer = null;
 
-    function stopPolling() {
-      if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
-    }
-
-    function startPolling(sessionKey) {
-      stopPolling();
-      const statusEl = document.getElementById('status');
-      if (statusEl) statusEl.textContent = 'QR scanned — generating session…';
-      _pollTimer = setInterval(async () => {
-        try {
-          const res  = await fetch('/session-status?key=' + sessionKey);
-          const data = await res.json();
-          if (data.status === 'complete') {
-            stopPolling();
-            showSessionResult(data);
-          } else if (data.status === 'failed') {
-            stopPolling();
-            if (statusEl) statusEl.textContent = 'Session failed: ' + (data.error || 'Unknown');
-          } else if (data.status === 'timeout') {
-            stopPolling();
-            if (statusEl) statusEl.textContent = 'Pairing timed out. Try again.';
-          }
-        } catch (e) {}
-      }, 3000);
-    }
-
-    function showSessionResult(data) {
-      const pasteId  = data.pasteId  || '';
-      const pasteUrl = data.pasteUrl || '';
-      const qrArea   = document.getElementById('qr-area');
-      const resultDiv = document.createElement('div');
-      resultDiv.style.cssText = 'margin-top:20px;width:100%;max-width:420px;';
-      resultDiv.innerHTML = `
-        <div style="background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.25);border-radius:14px;padding:20px 22px;">
-          <div style="color:var(--neon,#00ff88);font-weight:700;font-size:1rem;margin-bottom:12px;">✅ Session Ready</div>
-          <div style="font-size:0.78rem;opacity:0.65;margin-bottom:6px;">Session ID — paste into your bot</div>
-          <div id="qr-sid-val" style="font-family:monospace;font-size:0.9rem;word-break:break-all;background:rgba(0,0,0,0.3);padding:10px 12px;border-radius:8px;margin-bottom:10px;">${pasteId}</div>
-          <button id="qr-copy-sid" style="background:rgba(0,255,136,0.12);border:1px solid rgba(0,255,136,0.3);color:var(--neon,#00ff88);padding:7px 16px;border-radius:8px;cursor:pointer;font-size:0.8rem;">Copy Session ID</button>
-          ${data.sessionQr ? `
-          <div style="margin-top:16px;text-align:center;">
-            <div style="font-size:0.78rem;opacity:0.65;margin-bottom:8px;">Session QR — scan to load session</div>
-            <img src="${data.sessionQr}" style="width:160px;height:160px;border-radius:10px;display:block;margin:0 auto;" />
-          </div>` : ''}
-          <div style="font-size:0.7rem;opacity:0.45;margin-top:12px;text-align:center;">
-            Set env: <code style="background:rgba(0,255,136,0.08);padding:2px 6px;border-radius:4px;">SESSION_ID=${pasteId}</code>
-          </div>
-        </div>`;
-      if (qrArea) qrArea.appendChild(resultDiv);
-
-      document.getElementById('qr-copy-sid')?.addEventListener('click', async () => {
-        try { await navigator.clipboard.writeText(pasteId); } catch {}
-        const btn = document.getElementById('qr-copy-sid');
-        if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => { btn.textContent = 'Copy Session ID'; }, 2000); }
-      });
-    }
 
     // ── CANVAS ──
     const canvas = document.getElementById('bg-canvas');

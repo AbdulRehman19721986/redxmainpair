@@ -1,63 +1,71 @@
 /**
- * Paste.js – Upload creds.json to Pastebin, return raw URL.
+ * Paste.js – Upload creds.json to Pastebin/paste.rs
+ * Returns: REDXBOT302/SESSION_<pasteId>
  *
- * Env vars:
- *   PASTEBIN_API_KEY  – your Pastebin API dev key  (required for user-linked pastes)
- *   PASTEBIN_PRIVACY  – 0=public, 1=unlisted (default), 2=private
- *   PASTEBIN_EXPIRE   – expiry: N (never), 10M, 1H, 1D, 1W, 2W, 1M (default 1M)
+ * Env: PASTEBIN_API_KEY (optional – falls back to paste.rs)
  */
 
-import axios from 'axios';
-import fs from 'fs-extra';
-import FormData from 'form-data';
+import fs from 'fs';
 
-const PASTEBIN_API_URL = 'https://pastebin.com/api/api_post.php';
-const API_DEV_KEY      = process.env.PASTEBIN_API_KEY || '75TTl3WlG-piY0B40bb_Oh0mxO3nsE7o';
-const PRIVACY          = process.env.PASTEBIN_PRIVACY || '1';
-const EXPIRE           = process.env.PASTEBIN_EXPIRE  || '1M';
+const PASTEBIN_API_KEY = process.env.PASTEBIN_API_KEY || '';
 
-/**
- * Upload a file path to Pastebin.
- * @param {string} filePath   - Local path to creds.json
- * @param {string} [pasteName] - Paste title
- * @returns {Promise<string>}  - Raw Pastebin URL: https://pastebin.com/raw/XXXXXXXX
- */
-export async function uploadFile(filePath, pasteName = 'creds.json') {
-    const content = await fs.readFile(filePath, 'utf8');
-    // Validate JSON before upload
-    JSON.parse(content);
-    return uploadContent(content, pasteName);
+function readContent(input) {
+    if (Buffer.isBuffer(input)) return input.toString();
+    if (typeof input !== 'string') throw new Error('Unsupported input type.');
+    if (input.startsWith('data:')) return Buffer.from(input.split(',')[1], 'base64').toString();
+    if (input.startsWith('http://') || input.startsWith('https://')) return input;
+    if (fs.existsSync(input)) return fs.readFileSync(input, 'utf8');
+    return input;
 }
 
-/**
- * Upload raw string content to Pastebin.
- * @param {string} content
- * @param {string} [pasteName]
- * @returns {Promise<string>}  - Raw Pastebin URL
- */
-export async function uploadContent(content, pasteName = 'session') {
-    const form = new FormData();
-    form.append('api_dev_key',          API_DEV_KEY);
-    form.append('api_option',           'paste');
-    form.append('api_paste_code',       content);
-    form.append('api_paste_name',       pasteName);
-    form.append('api_paste_private',    PRIVACY);
-    form.append('api_paste_expire_date', EXPIRE);
-    form.append('api_paste_format',     'json');
-
-    const response = await axios.post(PASTEBIN_API_URL, form, {
-        headers: form.getHeaders(),
-        timeout: 15_000,
+async function uploadViaPastebin(content, title, format, privacy) {
+    const body = new URLSearchParams({
+        api_dev_key:          PASTEBIN_API_KEY,
+        api_option:           'paste',
+        api_paste_code:       content,
+        api_paste_name:       title,
+        api_paste_format:     format,
+        api_paste_private:    String({ '0': 0, '1': 1, '2': 2 }[privacy] ?? 1),
+        api_paste_expire_date: 'N',
     });
 
-    const url = response.data.trim();
-    if (!url.startsWith('https://pastebin.com/')) {
-        throw new Error(`Pastebin error: ${url}`);
-    }
-
-    // Convert normal URL → raw URL
-    return url.replace('pastebin.com/', 'pastebin.com/raw/');
+    const res  = await fetch('https://pastebin.com/api/api_post.php', { method: 'POST', body });
+    const text = await res.text();
+    if (!text.startsWith('https://')) throw new Error(`Pastebin error: ${text}`);
+    return text.trim();
 }
 
-// Default export for backward compatibility
-export default uploadFile;
+async function uploadViaPasteRs(content) {
+    const res = await fetch('https://paste.rs/', {
+        method:  'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body:    content,
+    });
+    if (!res.ok) throw new Error(`paste.rs error: ${res.status}`);
+    return (await res.text()).trim();
+}
+
+/**
+ * Upload creds file/content to Pastebin.
+ * @returns {Promise<string>}  e.g. "REDXBOT302/SESSION_AbCdEfGh"
+ */
+async function uploadToPastebin(input, title = 'Untitled', format = 'json', privacy = '1') {
+    const content = readContent(input);
+    let pasteUrl;
+
+    if (PASTEBIN_API_KEY) {
+        pasteUrl = await uploadViaPastebin(content, title, format, privacy);
+    } else {
+        console.log('⚠️ No PASTEBIN_API_KEY – using paste.rs fallback');
+        pasteUrl = await uploadViaPasteRs(content);
+    }
+
+    // Extract bare paste ID from URL  e.g. "AbCdEfGh"
+    const pasteId    = pasteUrl.replace(/https?:\/\/[^/]+\//, '');
+    const sessionStr = `REDXBOT302/SESSION_${pasteId}`;
+
+    console.log('✅ Session ID:', sessionStr);
+    return sessionStr;
+}
+
+export default uploadToPastebin;
