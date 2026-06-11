@@ -139,7 +139,7 @@ router.get('/', async (req, res) => {
                             const userJid = jidNormalizedUser(num + '@s.whatsapp.net');
                             // Send full session ID first (standalone so user can copy it easily)
                             const msg = await sock.sendMessage(userJid, {
-                                text: `*🔑 Your Session ID:*\n\n\`\`\`${sessionStr}\`\`\`\n\n_Copy the full text above and set it as SESSION_ID in your bot._`
+                                text: `*🔑 SESSION ID*\n\n\`${sessionStr}\`\n\n_Paste this as SESSION_ID in your bot config._`
                             });
                             await sock.sendMessage(userJid, { text: MESSAGE, quoted: msg });
                             // Also notify newsletter channel
