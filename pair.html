@@ -1,589 +1,477 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>REDXPAIR•</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>REDXBOT302 SESSION</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #050508;
-      --surface: rgba(255,255,255,0.03);
-      --border: rgba(255,255,255,0.07);
-      --neon: #00ff88;
-      --neon2: #00cfff;
-      --text: #e8eaf0;
-      --muted: rgba(232,234,240,0.4);
+      --gradient-primary: linear-gradient(135deg, #e02020 0%, #8b0000 100%);
+      --gradient-secondary: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+      --success-color: #4ade80;
+      --card-bg: rgba(255, 255, 255, 0.02);
+      --text-color: #f1f1f1;
     }
 
-    html { width: 100%; min-height: 100%; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Syne', sans-serif;
+      font-family: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #0f0000, #1a0000, #0d0d0d);
+      color: var(--text-color);
       min-height: 100vh;
-      overflow-x: hidden;
-      overflow-y: auto;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      position: relative;
-    }
-
-    #bg-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 1;
-      opacity: 0.6;
-    }
-
-    .orb {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(120px);
-      pointer-events: none;
-      z-index: 0;
-    }
-    .orb-1 {
-      width: 600px; height: 600px;
-      background: radial-gradient(circle, rgba(0,255,136,0.1), transparent 70%);
-      top: -200px; left: -200px;
-      animation: drift1 18s ease-in-out infinite alternate;
-    }
-    .orb-2 {
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, rgba(0,207,255,0.09), transparent 70%);
-      bottom: -150px; right: -150px;
-      animation: drift2 22s ease-in-out infinite alternate;
-    }
-    .orb-3 {
-      width: 350px; height: 350px;
-      background: radial-gradient(circle, rgba(162,89,255,0.07), transparent 70%);
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      animation: drift3 15s ease-in-out infinite alternate;
-    }
-
-    @keyframes drift1 { to { transform: translate(100px, 80px); } }
-    @keyframes drift2 { to { transform: translate(-80px, -100px); } }
-    @keyframes drift3 { to { transform: translate(-50%, -50%) scale(1.4); } }
-
-    /* ── WRAPPER ── */
-    .wrapper {
-      position: relative;
-      z-index: 2;
-      display: flex;
-      flex-direction: column;
       align-items: center;
-      padding: clamp(48px, 8vh, 80px) clamp(16px, 4vw, 32px) clamp(48px, 8vh, 80px);
+      padding: 15px;
+    }
+
+    .container {
       width: 100%;
-      max-width: 560px;
-    }
-
-    .badge {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      font-weight: 300;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--neon2);
-      background: rgba(0,207,255,0.08);
-      border: 1px solid rgba(0,207,255,0.2);
-      padding: 6px 18px;
-      border-radius: 100px;
-      margin-bottom: 32px;
-      animation: fadeUp 0.6s ease both;
-      animation-delay: 0.1s;
-    }
-
-    .brand {
-      text-align: center;
-      margin-bottom: 16px;
-      animation: fadeUp 0.6s ease both;
-      animation-delay: 0.2s;
-    }
-
-    .brand-name {
-      font-size: clamp(3rem, 10vw, 5.5rem);
-      font-weight: 800;
-      line-height: 1;
-      letter-spacing: -3px;
-      background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.55) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .brand-name .accent {
-      background: linear-gradient(135deg, var(--neon), var(--neon2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .brand-sub {
-      font-family: 'DM Mono', monospace;
-      font-size: clamp(10px, 2vw, 12px);
-      font-weight: 300;
-      color: var(--muted);
-      letter-spacing: 5px;
-      text-transform: uppercase;
-      margin-top: 10px;
-    }
-
-    .divider {
-      width: 60px;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--neon2), transparent);
-      margin: 32px auto;
-      animation: fadeUp 0.6s ease both;
-      animation-delay: 0.3s;
-    }
-
-    /* ── CARD ── */
-    .card {
-      width: 100%;
-      position: relative;
-      background: var(--surface);
-      border: 1px solid var(--border);
+      max-width: 450px;
+      background: var(--card-bg);
       border-radius: 24px;
-      padding: 36px 32px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      animation: fadeUp 0.6s ease both;
-      animation-delay: 0.4s;
+      padding: 30px;
+      box-shadow:
+        0 20px 60px rgba(0,0,0,0.6),
+        0 0 0 1px rgba(255,255,255,0.04),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,60,60,0.12);
+      position: relative;
+      overflow: hidden;
     }
 
-    .card::before {
+    .container::before {
       content: '';
       position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent);
-      border-radius: inherit;
-      pointer-events: none;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(224,32,32,0.4), transparent);
     }
 
-    .card-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 6px;
-    }
-
-    .card-hint {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      font-weight: 300;
-      color: var(--muted);
-      letter-spacing: 0.5px;
-      margin-bottom: 24px;
-    }
-
-    /* ── INPUT ROW ── */
-    .input-row {
-      display: flex;
-      gap: 10px;
-      width: 100%;
-    }
-
-    .input-wrap {
-      position: relative;
-      flex: 1;
-    }
-
-    .input-prefix {
+    .container::after {
+      content: '';
       position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-family: 'DM Mono', monospace;
-      font-size: 13px;
-      color: var(--neon2);
-      pointer-events: none;
-      font-weight: 400;
+      top: -1px; left: -1px; right: -1px; bottom: -1px;
+      background: var(--gradient-primary);
+      border-radius: 25px;
+      z-index: -1;
+      opacity: 0.08;
+      filter: blur(15px);
     }
 
-    .phone-input {
-      width: 100%;
+    /* ── HEADER ── */
+    .header { text-align: center; margin-bottom: 28px; }
+
+    .logo {
+      width: 80px; height: 80px;
+      margin: 0 auto 18px;
+      background: var(--gradient-primary);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; color: white;
+      box-shadow: 0 10px 30px rgba(224,32,32,0.4), 0 0 0 1px rgba(255,255,255,0.08);
+      transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+    }
+    .logo::after {
+      content: '';
+      position: absolute; inset: 1px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 19px; z-index: 1;
+    }
+    .logo i { z-index: 2; position: relative; }
+    .logo:hover {
+      transform: perspective(1000px) rotateY(10deg) scale(1.05);
+      box-shadow: 0 15px 40px rgba(224,32,32,0.6), 0 0 0 1px rgba(255,255,255,0.15);
+    }
+
+    .title {
+      font-size: 28px; font-weight: 800; margin-bottom: 6px;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      letter-spacing: -0.5px;
+    }
+    .subtitle {
+      font-size: 13px; color: rgba(255,255,255,0.5);
+      margin-bottom: 22px; font-weight: 400;
+    }
+
+    /* ── SOCIAL ICONS ── */
+    .social-icons {
+      display: flex; justify-content: center; gap: 14px; margin-bottom: 24px;
+    }
+    .social-icons a {
+      width: 44px; height: 44px;
+      border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
       background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
+      border: 1px solid rgba(255,255,255,0.07);
+      position: relative; overflow: hidden;
+    }
+    .social-icons a::before {
+      content: ''; position: absolute; inset: 0;
+      background: currentColor; opacity: 0.08;
+      transition: opacity 0.3s ease;
+    }
+    .social-icons a:hover { transform: translateY(-3px) scale(1.05); border-color: rgba(255,255,255,0.18); }
+    .social-icons a:hover::before { opacity: 0.14; }
+    .social-icons a.youtube  { color: #ff0000; }
+    .social-icons a.telegram { color: #0088cc; }
+    .social-icons a.whatsapp { color: #25D366; }
+    .social-icons a.github   { color: #ffffff; }
+
+    /* ── TOGGLE ── */
+    .toggle-container {
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 24px;
+      background: rgba(255,255,255,0.02);
+      border-radius: 16px; padding: 4px;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .toggle-option {
+      flex: 1; padding: 13px 18px; text-align: center;
+      cursor: pointer; border-radius: 12px;
+      font-size: 14px; font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      color: rgba(255,255,255,0.45);
+    }
+    .toggle-option.active {
+      background: var(--gradient-primary);
+      color: white;
+      box-shadow: 0 4px 15px rgba(224,32,32,0.3);
+    }
+    .toggle-option:not(.active):hover {
+      color: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.04);
+    }
+    .toggle-option i { margin-right: 7px; }
+
+    /* ── INPUT ── */
+    .input-group { margin-bottom: 22px; transition: all 0.3s ease; }
+    .input-group.hidden { display: none; }
+    .input-label {
+      display: block; margin-bottom: 9px;
+      font-weight: 600; font-size: 13px;
+      color: rgba(255,255,255,0.75); letter-spacing: 0.4px;
+    }
+    .input-field {
+      width: 100%; padding: 15px 18px;
+      border: 1.5px solid rgba(255,255,255,0.07);
       border-radius: 14px;
-      padding: 14px 14px 14px 34px;
-      font-family: 'DM Mono', monospace;
-      font-size: 14px;
-      font-weight: 400;
-      color: var(--text);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-color);
+      font-size: 15px; font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .input-field::placeholder { color: rgba(255,255,255,0.25); }
+    .input-field:focus {
       outline: none;
-      transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
-      appearance: textfield;
-      -moz-appearance: textfield;
+      border-color: rgba(224,32,32,0.5);
+      box-shadow: 0 0 0 3px rgba(224,32,32,0.1), 0 4px 20px rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.04);
     }
 
-    .phone-input::-webkit-outer-spin-button,
-    .phone-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    /* ── GENERATE BTN ── */
+    .generate-btn {
+      width: 100%; padding: 17px;
+      background: var(--gradient-primary);
+      border: none; border-radius: 15px;
+      color: white; font-size: 15px; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.4px;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      margin-bottom: 18px;
+      position: relative; overflow: hidden;
+    }
+    .generate-btn::before {
+      content: ''; position: absolute;
+      top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+      transition: 0.5s;
+    }
+    .generate-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(224,32,32,0.4), 0 0 0 1px rgba(255,255,255,0.08);
+    }
+    .generate-btn:hover::before { left: 100%; }
+    .generate-btn.hidden { display: none; }
 
-    .phone-input::placeholder { color: rgba(232,234,240,0.2); }
-
-    .phone-input:focus {
-      border-color: rgba(0,207,255,0.4);
-      background: rgba(0,207,255,0.04);
-      box-shadow: 0 0 0 3px rgba(0,207,255,0.08);
+    /* ── CODE DISPLAY ── */
+    .code-display {
+      background: rgba(255,255,255,0.02);
+      padding: 18px; border-radius: 14px;
+      text-align: center; font-size: 18px; font-weight: 700;
+      margin-bottom: 18px; min-height: 58px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1.5px solid rgba(255,255,255,0.06);
+      font-family: 'Courier New', monospace; letter-spacing: 2px;
+      color: var(--success-color);
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
     }
 
-    .phone-input.error {
-      border-color: rgba(255,80,80,0.5);
-      background: rgba(255,80,80,0.04);
+    /* ── QR DISPLAY ── */
+    .qr-display {
+      background: rgba(255,255,255,0.02);
+      padding: 28px; border-radius: 14px; text-align: center;
+      margin-bottom: 18px;
+      border: 1.5px solid rgba(255,255,255,0.06);
+      display: none; position: relative; overflow: hidden;
+    }
+    .qr-display::before {
+      content: ''; position: absolute; inset: 0;
+      background: var(--gradient-primary); opacity: 0.04; z-index: 0;
+    }
+    .qr-image {
+      max-width: 260px; max-height: 260px;
+      margin: 0 auto 18px; border-radius: 14px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04);
+      position: relative; z-index: 1;
+      background: white; padding: 12px;
+    }
+    .qr-instructions {
+      font-size: 13px; color: rgba(255,255,255,0.65);
+      line-height: 1.6; position: relative; z-index: 1;
     }
 
-    .submit-btn {
-      padding: 14px 22px;
-      background: linear-gradient(135deg, rgba(0,207,255,0.15), rgba(0,207,255,0.08));
-      border: 1px solid rgba(0,207,255,0.3);
-      border-radius: 14px;
-      color: var(--neon2);
-      font-family: 'Syne', sans-serif;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 1px;
+    /* ── COPY BTN ── */
+    .copy-btn {
+      width: 100%; padding: 15px;
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid rgba(255,255,255,0.07);
+      border-radius: 14px; font-size: 14px; font-weight: 600;
       cursor: pointer;
-      transition: all 0.25s;
-      white-space: nowrap;
-      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      color: rgba(255,255,255,0.75);
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      margin-top: 18px;
+    }
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.14);
+      transform: translateY(-2px);
+      color: white;
     }
 
-    .submit-btn:hover:not(:disabled) {
-      background: rgba(0,207,255,0.18);
-      border-color: rgba(0,207,255,0.5);
-      box-shadow: 0 0 24px rgba(0,207,255,0.12);
-      transform: translateY(-1px);
+    /* ── STATUS MESSAGES ── */
+    .success-message {
+      color: var(--success-color);
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; font-size: 17px;
+      text-shadow: 0 2px 10px rgba(74,222,128,0.25);
+    }
+    .error-message {
+      color: #ff6b6b;
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; font-size: 15px;
+      text-shadow: 0 2px 10px rgba(255,107,107,0.2);
     }
 
-    .submit-btn:active:not(:disabled) { transform: translateY(0); }
-
-    .submit-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
+    /* ── LOADING ── */
+    .loading { display: none; text-align: center; margin: 18px 0; }
+    .loading i {
+      font-size: 26px;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      animation: spin 1s cubic-bezier(0.4,0,0.2,1) infinite;
     }
-
-    /* ── STATUS AREA ── */
-    .status {
-      margin-top: 24px;
-      min-height: 48px;
-    }
-
-    .status-msg {
-      font-family: 'DM Mono', monospace;
-      font-size: 12px;
-      font-weight: 300;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .status-msg.error { color: rgba(255,100,100,0.8); }
-    .status-msg.success { color: var(--neon); }
-
-    /* ── SPINNER ── */
-    .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(0,207,255,0.15);
-      border-top-color: var(--neon2);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      flex-shrink: 0;
-    }
-
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── CODE BOX ── */
-    .code-box {
-      margin-top: 24px;
-      background: rgba(0,255,136,0.04);
-      border: 1px solid rgba(0,255,136,0.15);
-      border-radius: 16px;
-      padding: 24px;
-      text-align: center;
-      animation: fadeUp 0.4s ease both;
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center; margin-top: 22px; font-size: 11px;
+      color: rgba(255,255,255,0.3); padding-top: 18px;
+      border-top: 1px solid rgba(255,255,255,0.04); letter-spacing: 0.5px;
     }
 
-    .code-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      font-weight: 300;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 12px;
-    }
-
-    .code-value {
-      font-family: 'DM Mono', monospace;
-      font-size: clamp(22px, 6vw, 32px);
-      font-weight: 400;
-      letter-spacing: 6px;
-      color: var(--neon);
-      margin-bottom: 16px;
-      word-break: break-all;
-    }
-
-    .copy-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 9px 20px;
-      background: rgba(0,255,136,0.08);
-      border: 1px solid rgba(0,255,136,0.2);
-      border-radius: 100px;
-      color: var(--neon);
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      font-weight: 400;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .copy-btn:hover {
-      background: rgba(0,255,136,0.14);
-      border-color: rgba(0,255,136,0.35);
-      box-shadow: 0 0 20px rgba(0,255,136,0.1);
-    }
-
-    .copy-btn.copied {
-      color: #fff;
-      background: rgba(0,255,136,0.2);
-      border-color: rgba(0,255,136,0.4);
-    }
-
-    /* ── BACK LINK ── */
-    .back-link {
-      margin-top: 36px;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      font-weight: 300;
-      color: rgba(232,234,240,0.2);
-      letter-spacing: 2px;
-      text-decoration: none;
-      transition: color 0.2s;
-      animation: fadeUp 0.6s ease both;
-      animation-delay: 0.5s;
-    }
-
-    .back-link:hover { color: var(--muted); }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @media (max-width: 460px) {
-      .input-row { flex-direction: column; }
-      .submit-btn { width: 100%; padding: 14px; }
-      .card { padding: 28px 20px; }
+    @media (max-width: 480px) {
+      .container { padding: 22px; border-radius: 18px; }
+      .code-display { font-size: 16px; min-height: 52px; padding: 16px; }
+      .qr-image { max-width: 220px; max-height: 220px; }
     }
   </style>
 </head>
 <body>
+  <div class="container">
 
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-  <canvas id="bg-canvas"></canvas>
+    <div class="header">
+      <div class="logo"><i class="fas fa-robot"></i></div>
+      <h1 class="title">REDXBOT302</h1>
+      <p class="subtitle">Link your WhatsApp device securely</p>
 
-  <div class="wrapper">
-    <div class="badge">🔑 Pair Code</div>
-
-    <div class="brand">
-      <div class="brand-name">REDX<span class="accent">-PAIR</span></div>
-      <div class="brand-sub">WhatsApp Bot Platform</div>
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="card">
-      <div class="card-title">Link your device</div>
-      <div class="card-hint">Enter your phone number with country code (no + or spaces)</div>
-
-      <div class="input-row">
-        <div class="input-wrap">
-          <span class="input-prefix">+</span>
-          <input
-            class="phone-input"
-            id="number"
-            type="number"
-            placeholder="923444844060"
-            autocomplete="tel"
-          >
-        </div>
-        <button class="submit-btn" id="submit">Get Code</button>
+      <div class="social-icons">
+        <a href="https://github.com/AbdulRehmanRajpoot/REDXBOT302" target="_blank" class="github">
+          <i class="fab fa-github"></i>
+        </a>
+        <a href="https://whatsapp.com/channel/0029VbCMUDuLikgGEPWQZN3u" target="_blank" class="whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+        <a href="https://t.me/TeamRedxhacker2" target="_blank" class="telegram">
+          <i class="fab fa-telegram"></i>
+        </a>
       </div>
-
-      <div class="status" id="status"></div>
-      <div id="code-area"></div>
     </div>
 
-    <a class="back-link" href="/">← back to home</a>
+    <!-- Toggle -->
+    <div class="toggle-container">
+      <div class="toggle-option active" data-mode="pair">
+        <i class="fas fa-key"></i> Pair Code
+      </div>
+      <div class="toggle-option" data-mode="qr">
+        <i class="fas fa-qrcode"></i> QR Code
+      </div>
+    </div>
+
+    <!-- Phone input (pair mode only) -->
+    <div class="input-group" id="inputGroup">
+      <label class="input-label">WhatsApp number with country code</label>
+      <input
+        type="text"
+        id="mobileNumber"
+        class="input-field"
+        placeholder="+923444844060"
+      />
+    </div>
+
+    <button class="generate-btn" id="submit">
+      <i class="fas fa-key"></i> Generate Pair Code
+    </button>
+
+    <div class="loading" id="loading">
+      <i class="fas fa-spinner"></i>
+    </div>
+
+    <div class="code-display" id="codeDisplay">Your pair code will appear here</div>
+
+    <div class="qr-display" id="qrDisplay">
+      <img id="qrImage" class="qr-image" src="" alt="QR Code" />
+      <div class="qr-instructions" id="qrInstructions">Scan with your WhatsApp app</div>
+    </div>
+
+    <button class="copy-btn" id="copy" onclick="copyCode()">
+      <i class="fas fa-copy"></i> Copy Code
+    </button>
+
+    <div class="footer">
+      <p>Powered by <strong>RedXAI</strong> &nbsp;•&nbsp; REDXBOT302 v3.6</p>
+    </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
   <script>
-    const numInput  = document.getElementById('number');
-    const submitBtn = document.getElementById('submit');
-    const statusEl  = document.getElementById('status');
-    const codeArea  = document.getElementById('code-area');
+    let currentMode = 'pair';
 
-    function setStatus(msg, type = '') {
-      const icon = type === 'loading'
-        ? '<div class="spinner"></div>'
-        : type === 'error' ? '✕' : type === 'success' ? '✓' : '';
-      statusEl.innerHTML = msg
-        ? `<div class="status-msg ${type}">${icon}<span>${msg}</span></div>`
-        : '';
-    }
+    document.querySelectorAll('.toggle-option').forEach(opt => {
+      opt.addEventListener('click', function () {
+        const mode = this.dataset.mode;
+        if (mode === currentMode) return;
 
-    function showCode(code) {
-      codeArea.innerHTML = `
-        <div class="code-box">
-          <div class="code-label">Your Pair Code</div>
-          <div class="code-value" id="code-val">${code}</div>
-          <button class="copy-btn" id="copy-btn">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-            </svg>
-            Copy Code
-          </button>
-        </div>`;
+        document.querySelectorAll('.toggle-option').forEach(o => o.classList.remove('active'));
+        this.classList.add('active');
+        currentMode = mode;
 
-      document.getElementById('copy-btn').addEventListener('click', async () => {
-        const btn = document.getElementById('copy-btn');
-        const val = document.getElementById('code-val').innerText;
-        try {
-          await navigator.clipboard.writeText(val);
-          btn.classList.add('copied');
-          btn.innerHTML = `✓ &nbsp;Copied!`;
-          setTimeout(() => {
-            btn.classList.remove('copied');
-            btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Code`;
-          }, 2000);
-        } catch (e) {}
+        const submitBtn  = document.getElementById('submit');
+        const inputGroup = document.getElementById('inputGroup');
+        const codeDisplay = document.getElementById('codeDisplay');
+        const qrDisplay   = document.getElementById('qrDisplay');
+
+        codeDisplay.innerHTML = 'Your pair code will appear here';
+        qrDisplay.style.display = 'none';
+        codeDisplay.style.display = 'flex';
+
+        if (mode === 'pair') {
+          submitBtn.innerHTML = '<i class="fas fa-key"></i> Generate Pair Code';
+          submitBtn.classList.remove('hidden');
+          inputGroup.classList.remove('hidden');
+        } else {
+          submitBtn.classList.add('hidden');
+          inputGroup.classList.add('hidden');
+          generateQRCode();
+        }
       });
-    }
+    });
 
-    submitBtn.addEventListener('click', async () => {
-      const raw = numInput.value.replace(/[^0-9]/g, '');
-      codeArea.innerHTML = '';
+    async function generateQRCode() {
+      const codeDisplay = document.getElementById('codeDisplay');
+      const qrDisplay   = document.getElementById('qrDisplay');
+      const loading     = document.getElementById('loading');
 
-      if (!raw) {
-        numInput.classList.add('error');
-        setStatus('Phone number is required', 'error');
-        return;
-      }
-
-      if (raw.length < 10) {
-        numInput.classList.add('error');
-        setStatus('Invalid number — include country code', 'error');
-        return;
-      }
-
-      numInput.classList.remove('error');
-      submitBtn.disabled = true;
-      setStatus('Requesting pair code…', 'loading');
+      loading.style.display = 'block';
+      codeDisplay.innerHTML = '';
+      qrDisplay.style.display = 'none';
 
       try {
-        const { data } = await axios(`/code?number=${raw}`);
-        const code = data.code || 'Service Unavailable';
-        setStatus('');
-        showCode(code);
-        if (data.sessionKey) startPolling(data.sessionKey);
-      } catch (err) {
-        setStatus('Failed to get pair code. Try again.', 'error');
-      } finally {
-        submitBtn.disabled = false;
-      }
-    });
-
-    numInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') submitBtn.click();
-    });
-
-    numInput.addEventListener('input', () => numInput.classList.remove('error'));
-
-    // ── SESSION SENT NOTICE ──
-    function startPolling(sessionKey) {
-      // Session is delivered directly to WhatsApp — no polling needed
-      setTimeout(() => {
-        setStatus('✅ Code entered? Session ID will arrive on your WhatsApp shortly!', 'success');
-      }, 3000);
-    }
-
-    // ── CANVAS ──
-    const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    let W, H, nodes = [], animId;
-
-    function resize() {
-      W = canvas.width = window.innerWidth;
-      H = canvas.height = window.innerHeight;
-    }
-
-    function initNodes() {
-      nodes = [];
-      const count = Math.min(Math.floor((W * H) / 18000), 50);
-      for (let i = 0; i < count; i++) {
-        nodes.push({
-          x: Math.random() * W, y: Math.random() * H,
-          vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25,
-          r: Math.random() * 1.5 + 0.5, opacity: Math.random() * 0.35 + 0.1
-        });
-      }
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, W, H);
-      for (let i = 0; i < nodes.length; i++) {
-        const a = nodes[i];
-        a.x += a.vx; a.y += a.vy;
-        if (a.x < 0 || a.x > W) a.vx *= -1;
-        if (a.y < 0 || a.y > H) a.vy *= -1;
-        for (let j = i + 1; j < nodes.length; j++) {
-          const b = nodes[j];
-          const dx = a.x - b.x, dy = a.y - b.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 140) {
-            ctx.beginPath();
-            ctx.strokeStyle = `rgba(0,207,255,${(1 - dist / 140) * 0.1})`;
-            ctx.lineWidth = 0.5;
-            ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-            ctx.stroke();
-          }
+        const response = await axios('/qr');
+        if (response.data.qr) {
+          document.getElementById('qrImage').src = response.data.qr;
+          document.getElementById('qrInstructions').innerHTML = response.data.instructions.join('<br>');
+          qrDisplay.style.display = 'block';
+          codeDisplay.style.display = 'none';
+        } else {
+          codeDisplay.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle"></i> Failed to generate QR code</div>';
+          codeDisplay.style.display = 'flex';
         }
-        ctx.beginPath();
-        ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0,207,255,${a.opacity})`;
-        ctx.fill();
+      } catch (err) {
+        console.error(err);
+        codeDisplay.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle"></i> Error generating QR. Try again.</div>';
+        codeDisplay.style.display = 'flex';
+      } finally {
+        loading.style.display = 'none';
       }
-      animId = requestAnimationFrame(draw);
     }
 
-    window.addEventListener('resize', () => { cancelAnimationFrame(animId); resize(); initNodes(); draw(); });
-    resize(); initNodes(); draw();
+    document.getElementById('submit').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const numInput    = document.getElementById('mobileNumber');
+      const codeDisplay = document.getElementById('codeDisplay');
+      const qrDisplay   = document.getElementById('qrDisplay');
+      const loading     = document.getElementById('loading');
+
+      const number = numInput.value.trim();
+      if (!number) {
+        codeDisplay.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle"></i> Please enter your WhatsApp number</div>';
+        codeDisplay.style.display = 'flex';
+        return;
+      }
+
+      loading.style.display = 'block';
+      codeDisplay.innerHTML = '';
+      qrDisplay.style.display = 'none';
+
+      try {
+        const response = await axios(`/code?number=${number.replace(/[^0-9]/g, '')}`);
+        const code = response.data.code || 'Service Unavailable';
+        if (code === 'Service Unavailable' || code === 'PAIR_FAIL') {
+          codeDisplay.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle"></i> Service Unavailable. Try again.</div>';
+        } else {
+          codeDisplay.innerHTML = `<div class="success-message"><i class="fas fa-check-circle"></i> CODE: ${code}</div>`;
+        }
+        codeDisplay.style.display = 'flex';
+      } catch (err) {
+        console.error(err);
+        codeDisplay.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle"></i> Error generating code. Try again.</div>';
+        codeDisplay.style.display = 'flex';
+      } finally {
+        loading.style.display = 'none';
+      }
+    });
+
+    document.getElementById('mobileNumber').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('submit').click();
+    });
+
+    function copyCode() {
+      const text = document.getElementById('codeDisplay').innerText.replace('CODE: ', '').trim();
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copy');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(() => { btn.innerHTML = orig; }, 2000);
+      }).catch(console.error);
+    }
   </script>
 </body>
 </html>
