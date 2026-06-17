@@ -6,6 +6,7 @@
   <title>REDX • QR Code</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -145,6 +146,31 @@
       text-transform: uppercase;
       margin-top: 10px;
     }
+
+    .social-icons {
+      display: flex; justify-content: center; gap: 14px; margin-top: 18px;
+    }
+    .social-icons a {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      position: relative; overflow: hidden;
+    }
+    .social-icons a::before {
+      content: ''; position: absolute; inset: 0;
+      background: currentColor; opacity: 0.08;
+      transition: opacity 0.3s ease;
+    }
+    .social-icons a:hover { transform: translateY(-3px) scale(1.05); border-color: rgba(255,255,255,0.18); }
+    .social-icons a:hover::before { opacity: 0.14; }
+    .social-icons a.youtube  { color: #ff0000; }
+    .social-icons a.telegram { color: #0088cc; }
+    .social-icons a.whatsapp { color: #25D366; }
+    .social-icons a.github   { color: #ffffff; }
 
     .divider {
       width: 60px;
@@ -416,6 +442,23 @@
     <div class="brand">
       <div class="brand-name">REDX<span class="accent">-PAIR</span></div>
       <div class="brand-sub">WhatsApp Bot Platform</div>
+      <div class="social-icons">
+        <a href="https://github.com/AbdulRehman19721986/redxbot302" target="_blank" class="github" title="GitHub">
+          <i class="fab fa-github"></i>
+        </a>
+        <a href="https://chat.whatsapp.com/C4ynk2v10WXDeL67ahhJLj" target="_blank" class="whatsapp" title="WhatsApp Group">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+        <a href="https://whatsapp.com/channel/0029VbCMUDuLikgGEPWQZN3u" target="_blank" class="whatsapp" title="WhatsApp Channel">
+          <i class="fas fa-bullhorn"></i>
+        </a>
+        <a href="https://youtube.com/@rootmindtech" target="_blank" class="youtube" title="YouTube">
+          <i class="fab fa-youtube"></i>
+        </a>
+        <a href="https://t.me/TeamRedxhacker2" target="_blank" class="telegram" title="Telegram">
+          <i class="fab fa-telegram"></i>
+        </a>
+      </div>
     </div>
 
     <div class="divider"></div>

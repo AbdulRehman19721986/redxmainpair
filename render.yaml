@@ -12,7 +12,7 @@ services:
       - key: PORT
         value: 8000
       - key: PASTEBIN_API_KEY
-        value: 75TTl3WlG-piY0B40bb_Oh0mxO3nsE7o   # ← replace with your key
+        value: ""   # unused now (session delivery is direct base64, not Pastebin) — set in Render dashboard if you ever need it, never commit real keys here
       - key: PASTEBIN_PRIVACY
         value: "1"
       - key: PASTEBIN_EXPIRE

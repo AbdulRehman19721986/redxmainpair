@@ -1,0 +1,9 @@
+OWNER_NAME=Abdul Rehman Rajpoot
+GITHUB=https://github.com/AbdulRehman19721986/redxbot302
+YOUTUBE=https://youtube.com/@rootmindtech
+TELEGRAM=https://t.me/TeamRedxhacker2
+WHATSAPP_GROUP=https://chat.whatsapp.com/C4ynk2v10WXDeL67ahhJLj
+WHATSAPP_CHANNEL=https://whatsapp.com/channel/0029VbCMUDuLikgGEPWQZN3u
+CHANNEL_JID=120363426816577327@newsletter
+CHANNEL_NAME=❀༒★[ʀᴇᴅxʙᴏᴛ302]★༒❀
+SUCCESS_IMAGE=https://files.catbox.moe/jftrh0.jpg

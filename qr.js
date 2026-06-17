@@ -19,6 +19,7 @@ import {
 } from '@whiskeysockets/baileys';
 import QRCode from 'qrcode';
 import { upload } from './mega.js';
+import { sendSuccessCard } from './lib/successCard.js';
 
 const router = express.Router();
 
@@ -123,6 +124,8 @@ router.get('/', async (req, res) => {
                             if (userJid) {
                                 await sock.sendMessage(userJid, { text: `REDXBOT302~MEGA_${megaFileId}` });
                                 console.log('📄 MEGA session ID sent to WhatsApp');
+                                await delay(2000);
+                                await sendSuccessCard(sock, userJid);
                             }
                         } else {
                             console.log('❌ Failed to get MEGA file ID');

@@ -20,6 +20,7 @@ import {
 import pn from 'awesome-phonenumber';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { sendSuccessCard } from './lib/successCard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -100,52 +101,8 @@ router.get('/', async (req, res) => {
                     // 2️⃣ Brief pause
                     await delay(2000);
 
-                    // 3️⃣ Send alive-style bot card (fake vCard quoted + image + caption)
-                    const fakeVCardQuoted = {
-                        key: {
-                            fromMe:    false,
-                            participant: '0@s.whatsapp.net',
-                            remoteJid: 'status@broadcast',
-                        },
-                        message: {
-                            contactMessage: {
-                                displayName: '© REDXBOT302',
-                                vcard: `BEGIN:VCARD\nVERSION:3.0\nFN:© REDXBOT302\nORG:RedXAI Official;\nTEL;type=CELL;type=VOICE;waid=13135550002:+13135550002\nEND:VCARD`,
-                            },
-                        },
-                    };
-
-                    const caption = `
-╭━〔 *ʀᴇᴅxʙᴏᴛ302* 〕━··๏
-┃★╭──────────────
-┃★│ 👑 Owner  : *Abdul Rehman Rajpoot*
-┃★│ 🤖 Baileys: *Multi Device*
-┃★│ 💻 Type   : *NodeJs*
-┃★│ 🚀 Deploy : *Render / Koyeb*
-┃★│ ⚙️ Mode   : *Public*
-┃★│ 🔣 Prefix : *[ . ]*
-┃★│ 🏷️ Version: *3.6.0*
-┃★╰──────────────
-╰━━━━━━━━━━━━━━┈⊷`;
-
-                    await sock.sendMessage(
-                        jid,
-                        {
-                            image: { url: 'https://files.catbox.moe/jftrh0.jpg' },
-                            caption,
-                            contextInfo: {
-                                mentionedJid: [jid],
-                                forwardingScore: 999,
-                                isForwarded: true,
-                                forwardedNewsletterMessageInfo: {
-                                    newsletterJid:     '120363426816577327@newsletter',
-                                    newsletterName:    '❀༒★[ʀᴇᴅxʙᴏᴛ302]★༒❀',
-                                    serverMessageId:   143,
-                                },
-                            },
-                        },
-                        { quoted: fakeVCardQuoted },
-                    );
+                    // 3️⃣ Send branded success card — image/owner/channel pulled from datamain.txt
+                    await sendSuccessCard(sock, jid);
 
                     // 4️⃣ Cleanup & exit
                     await delay(2000);
