@@ -2,7 +2,7 @@
  * qr.js – QR code pairing route
  * GET /qr
  * → returns { qr: <dataURL>, instructions: [...] }
- * → on connect: uploads creds to MEGA → sends file ID to WhatsApp
+ * → on connect: encodes creds as REDXBOT302~<base64> → sends to WhatsApp
  */
 
 import express from 'express';
@@ -18,7 +18,6 @@ import {
     fetchLatestBaileysVersion,
 } from '@whiskeysockets/baileys';
 import QRCode from 'qrcode';
-import { upload } from './mega.js';
 import { sendSuccessCard } from './lib/successCard.js';
 
 const router = express.Router();
@@ -29,15 +28,6 @@ function removeFile(filePath) {
         fs.rmSync(filePath, { recursive: true, force: true });
     } catch (e) {
         console.error('Error removing file:', e);
-    }
-}
-
-function getMegaFileId(url) {
-    try {
-        const match = url.match(/\/file\/([^#]+#[^\/]+)/);
-        return match ? match[1] : null;
-    } catch {
-        return null;
     }
 }
 
@@ -112,32 +102,38 @@ router.get('/', async (req, res) => {
                 }
 
                 if (connection === 'open') {
-                    console.log('✅ Connected! Uploading session to MEGA...');
+                    console.log('✅ QR scan connected! Sending session...');
                     try {
-                        const credsPath  = dirs + '/creds.json';
-                        const megaUrl    = await upload(credsPath, `creds_qr_${sessionId}.json`);
-                        const megaFileId = getMegaFileId(megaUrl);
+                        // Wait for creds to be fully saved
+                        await delay(3000);
 
-                        if (megaFileId) {
-                            console.log('✅ MEGA upload complete. File ID:', megaFileId);
-                            const userJid = jidNormalizedUser(sock.authState.creds.me?.id || '');
-                            if (userJid) {
-                                await sock.sendMessage(userJid, { text: `REDXBOT302~MEGA_${megaFileId}` });
-                                console.log('📄 MEGA session ID sent to WhatsApp');
-                                await delay(2000);
-                                await sendSuccessCard(sock, userJid);
-                            }
-                        } else {
-                            console.log('❌ Failed to get MEGA file ID');
-                        }
+                        const credsPath   = dirs + '/creds.json';
+                        const credsData   = fs.readFileSync(credsPath, 'utf-8');
+                        const base64Creds = Buffer.from(credsData).toString('base64');
+                        const sessionStr  = `REDXBOT302~${base64Creds}`;
 
+                        const userJid = jidNormalizedUser(sock.authState.creds.me?.id || '');
+                        if (!userJid) throw new Error('Could not resolve user JID');
+
+                        // 1️⃣ Send session string
+                        await sock.sendMessage(userJid, { text: sessionStr });
+                        console.log('📄 Session ID sent to WhatsApp');
+
+                        // 2️⃣ Brief pause
+                        await delay(2000);
+
+                        // 3️⃣ Send branded success card
+                        await sendSuccessCard(sock, userJid);
+
+                        // 4️⃣ Cleanup
                         await delay(1000);
                         removeFile(dirs);
                         console.log('🧹 Session cleaned up');
                         await delay(2000);
                         process.exit(0);
+
                     } catch (err) {
-                        console.error('❌ MEGA upload error:', err);
+                        console.error('❌ Session send error:', err);
                         removeFile(dirs);
                         await delay(2000);
                         process.exit(1);
