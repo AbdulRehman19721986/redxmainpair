@@ -17,6 +17,18 @@
  *****************************************************************************/
 
 /* ============================================================
+   ESM COMPATIBILITY SHIMS
+   package.json has "type":"module" but this file uses CJS-style
+   require(). createRequire bridges the gap without rewriting the
+   whole file. __filename / __dirname are not auto-defined in ESM.
+   ============================================================ */
+import { createRequire } from 'module';
+import { fileURLToPath }  from 'url';
+const require    = createRequire(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = require('path').dirname(__filename);
+
+/* ============================================================
    GLOBAL ERROR SUPPRESSION — MUST BE FIRST
    ============================================================ */
 const _origError = console.error.bind(console);
@@ -82,7 +94,7 @@ const fs   = require('fs');
    ============================================================ */
 require('dotenv').config();
 require('./config');
-require('./settings');
+require('./settings.cjs');
 
 const { Boom }        = require('@hapi/boom');
 const chalk           = require('chalk');
@@ -129,7 +141,7 @@ const {
     handleCall,
     handleGroupParticipantUpdate,
 } = require('./lib/messageHandler');
-const settings       = require('./settings');
+const settings       = require('./settings.cjs');
 const commandHandler = require('./lib/commandHandler');
 const { initPresenceManager, onOwnerActivity } = require('./lib/presenceManager');
 
