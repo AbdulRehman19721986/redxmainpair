@@ -1,36 +1,53 @@
 /**
- * index.js – REDXPAIR pairing server entry point
- * Serves HTML pages + mounts pair/QR API routers.
+ * index.js – REDXMAINPAIR Server
+ * Routes:
+ *   GET /       → pair.html  (single page: pair code + QR toggle)
+ *   GET /code   → pair.js    (pair code → REDXBOT302~base64 sent to WhatsApp)
+ *   GET /qr     → qr.js      (QR scan   → MEGA session ID sent to WhatsApp)
  */
 
-import express  from 'express';
+import 'dotenv/config';
+import express from 'express';
+import bodyParser from 'body-parser';
+import cors from 'cors';
 import { fileURLToPath } from 'url';
-import { dirname, join }  from 'path';
+import path from 'path';
+
 import pairRouter from './pair.js';
 import qrRouter   from './qr.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname  = dirname(__filename);
+const app = express();
 
-const app  = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
+
 const PORT = process.env.PORT || 8000;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+import('events').then(events => {
+    events.EventEmitter.defaultMaxListeners = 500;
+});
 
-// ── HTML pages ────────────────────────────────────────
-app.get('/',       (_req, res) => res.sendFile(join(__dirname, 'main.html')));
-app.get('/pair',   (_req, res) => res.sendFile(join(__dirname, 'pair.html')));
-app.get('/qrpage', (_req, res) => res.sendFile(join(__dirname, 'qr.html')));
+/* ✅ CORS */
+app.use(cors({
+    origin:         '*',
+    methods:        ['GET', 'POST'],
+    allowedHeaders: ['Content-Type'],
+}));
 
-// ── API routes ────────────────────────────────────────
-app.use('/code', pairRouter);   // GET /code?number=923...
-app.use('/qr',   qrRouter);     // GET /qr
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(__dirname));
 
-// ── Health check (keep-alive / Render ping) ───────────
-app.get('/ping', (_req, res) => res.send('pong'));
+/* ✅ ROUTES */
+app.use('/code', pairRouter);
+app.use('/qr',   qrRouter);
 
-// ── Start ─────────────────────────────────────────────
-app.listen(PORT, () =>
-    console.log(`🌐 REDXPAIR server running on port ${PORT}`)
-);
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'pair.html'));
+});
+
+app.listen(PORT, () => {
+    console.log(`🚀 REDXBOT302 Pair Server running on http://localhost:${PORT}`);
+});
+
+export default app;

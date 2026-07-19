@@ -6,4 +6,4 @@ WHATSAPP_GROUP=https://chat.whatsapp.com/C4ynk2v10WXDeL67ahhJLj
 WHATSAPP_CHANNEL=https://whatsapp.com/channel/0029VbCMUDuLikgGEPWQZN3u
 CHANNEL_JID=120363426816577327@newsletter
 CHANNEL_NAME=❀༒★[ʀᴇᴅxʙᴏᴛ302]★༒❀
-SUCCESS_IMAGE=https://files.catbox.moe/jftrh0.jpg
+SUCCESS_IMAGE=https://files.catbox.moe/s36b12.jpg
